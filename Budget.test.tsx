@@ -22,6 +22,19 @@ describe('Budget Service 無資料', () => {
 		const today = new Date();
 		expect(budgetService.totalAmount(today, today)).toBe(0);
 	});
+	it('非法起訖', () => {
+		const budgetService = new BudgetService();
+		budgets = [
+			{ yearMonth: '202306', amount: 30 },
+			{ yearMonth: '202307', amount: 310 },
+			{ yearMonth: '202308', amount: 3100 },
+		];
+		budgetService.getAll = () => budgets;
+		const start = new Date('2023-06-29');
+		const end = new Date('2023-08-02');
+
+		expect(budgetService.totalAmount(end, start)).toBe(0);
+	});
 });
 describe('Budget Service 有資料', () => {
 	it('單日查詢', () => {
@@ -65,5 +78,18 @@ describe('Budget Service 有資料', () => {
 		const end = new Date('2023-08-02'); // 200
 
 		expect(budgetService.totalAmount(start, end)).toBe(512);
+	});
+	it('跨多月，其中一筆無資料', () => {
+		const budgetService = new BudgetService();
+		budgets = [
+			{ yearMonth: '202307', amount: 0 },
+			{ yearMonth: '202306', amount: 30 },
+			{ yearMonth: '202308', amount: 3100 },
+		];
+		budgetService.getAll = () => budgets;
+		const start = new Date('2023-06-29'); // 2
+		const end = new Date('2023-08-02'); // 200
+
+		expect(budgetService.totalAmount(start, end)).toBe(202);
 	});
 });

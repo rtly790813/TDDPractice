@@ -31,24 +31,25 @@ export class BudgetService {
 	totalAmount = (startDate: Date, endDate: Date) => {
 		const start = dayjs(startDate);
 		const end = dayjs(endDate);
-
 		const startYearMonth = start.format('YYYYMM');
 		const endYearMonth = end.format('YYYYMM');
-
 		let data = this.getAll();
 
 		if (!data) {
 			return 0;
 		}
 
-		const startIndex = data.findIndex(
-			(item) => item.yearMonth === startYearMonth
-		);
-		const endIndex = data.findIndex(
-			(item) => item.yearMonth === endYearMonth
-		);
+		if (start.isAfter(end)) {
+			return 0;
+		}
 
-		const budgetData = data.slice(startIndex, endIndex + 1);
+		const budgetData = data.filter(
+			(item) =>
+				start.isSame(item.yearMonth, 'month') ||
+				start.isBefore(item.yearMonth, 'month') ||
+				end.isSame(item.yearMonth, 'month') ||
+				end.isAfter(item.yearMonth, 'month')
+		);
 
 		const total = budgetData.reduce((sum, current) => {
 			const monthLength = dayjs(current.yearMonth).daysInMonth();
@@ -59,12 +60,10 @@ export class BudgetService {
 			}
 			if (current.yearMonth === startYearMonth) {
 				const diff = monthLength - start.date() + 1;
-				console.log('sart', diff);
 				return (sum += dayAmount * diff);
 			}
 			if (current.yearMonth === endYearMonth) {
 				const diff = end.date();
-				console.log('end', diff);
 				return (sum += dayAmount * diff);
 			}
 			return (sum += current.amount);
